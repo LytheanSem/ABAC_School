@@ -122,7 +122,9 @@ def main():
 
     if len(safe_sequence) == len(allocation_matrix):
         print("\nSystem is in a safe state.")
-        print("Safe sequence:", safe_sequence)
+        # print("Safe sequence:", safe_sequence)
+        print("Safe sequence: P" + ", P".join(map(str, safe_sequence)))
+            
     else:
         print("\nDeadlock occurred in iteration", iteration)
 
