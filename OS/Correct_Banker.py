@@ -22,12 +22,22 @@ def print_resource_instances(resources):
 
 def print_matrix(matrix, header, label):
     print("\n{}:".format(label))
-    print("{:10} {}".format("Process", " ".join(header)))
+    
+    # Calculate the maximum width of each column
+    max_widths = [max(len(str(matrix[i][j])) for i in range(len(matrix))) for j in range(len(header))]
+    
+    # Print the header
+    print("{:10}".format("Process"), end=" ")
+    for i in range(len(header)):
+        print("{:>{width}}".format(header[i], width=max_widths[i] + 1), end=" ")
+    print()
+    
+    # Print the matrix
     for i in range(len(matrix)):
-        print("{:10} {}".format(
-            f"P{i}",
-            " ".join("{:<3}".format(str(matrix[i][j])) for j in range(len(header)))
-        ))
+        print("{:10}".format(f"P{i}"), end=" ")
+        for j in range(len(header)):
+            print("{:>{width}}".format(matrix[i][j], width=max_widths[j] + 1), end=" ")
+        print()
 
 
 def calculate_need_matrix(allocation_matrix, max_matrix):
@@ -63,12 +73,22 @@ def bankers_algorithm(resources, allocation_matrix, max_matrix):
 
         print("\nIteration:", iteration)
         print("Available Resources:", available_resources)
-
-        # Print the Need Table
+        
+        # Print Max Matrix
+        print_matrix(max_matrix, ["R{}".format(i) for i in range(len(max_matrix[0]))], "Max Matrix")
+        
+        # Print Allocation Matrix
+        print_matrix(allocation_matrix, ["R{}".format(i) for i in range(len(allocation_matrix[0]))], "Allocation Matrix")
+        
+        # Print Need Matrix
+        print("\nNeed Matrix:")
         header = ["R{}".format(i) for i in range(resources_count)]
-        print("\n{:10} {}".format("Process", " ".join(header)))
+        print("{:10} {}".format("Process", " ".join(header)))
         for i in range(processes):
-            print("{:10} {}".format(f"P{i}", " ".join(map(str, need_matrix[i]))))
+            print("{:10} {}".format(
+                f"P{i}",
+                " ".join("{:>2}".format(str(need_matrix[i][j])) for j in range(resources_count))
+            ))
 
         for i in range(processes):
             if i not in safe_sequence and is_less_than_or_equal(need_matrix[i], available_resources):
@@ -89,7 +109,6 @@ def bankers_algorithm(resources, allocation_matrix, max_matrix):
     return safe_sequence, iteration
 
 
-
 def main():
     processes = int(input("Enter the number of processes: "))
     num_resources = int(input("Enter the number of resources: "))   
@@ -100,11 +119,11 @@ def main():
     # Print resource instances
     print_resource_instances(initial_resources)
 
-    # Print Allocation matrix
-    print_matrix(allocation_matrix, ["R{}".format(i) for i in range(num_resources)], "Allocation Matrix")
+    # Print Allocation Matrix from input file
+    print_matrix(allocation_matrix, ["R{}".format(i) for i in range(len(allocation_matrix[0]))], "Allocation Matrix (From Input File)")
 
-    # Print Max matrix
-    print_matrix(max_matrix, ["R{}".format(i) for i in range(num_resources)], "Max Matrix")
+    # Print Max Matrix from input file
+    print_matrix(max_matrix, ["R{}".format(i) for i in range(len(max_matrix[0]))], "Max Matrix (From Input File)")
 
     safe_sequence, iteration = bankers_algorithm(initial_resources, allocation_matrix, max_matrix)
 
