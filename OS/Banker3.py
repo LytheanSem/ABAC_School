@@ -101,6 +101,8 @@ def bankers_algorithm(resources, allocation_matrix, max_matrix):
                 allocation_matrix[i] = [0] * resources_count
                 # Update the need matrix to reflect the released resources
                 need_matrix[i] = [0] * resources_count
+                # Update the max matrix to reflect the released resources
+                max_matrix[i] = [0] * resources_count
                 break
 
         if not found:
