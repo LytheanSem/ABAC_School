@@ -49,8 +49,8 @@ class InstructionSet:
     def encode_instruction(self):
         opcode = self.five_bit_opcode()
         operand1 = self.register.to_3bit_adr()
-        # Take the lower 24 bits of the value
-        operand2 = self.to_32bit_val()[-24:]
+        # Take the lower 16 bits of the value
+        operand2 = self.to_32bit_val()[-16:]
         return f"[{opcode} {operand1} {operand2}]"
 
     def to_32bit_val(self):
