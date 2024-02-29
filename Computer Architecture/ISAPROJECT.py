@@ -110,25 +110,20 @@ def main():
             }
 
             # Update this section to handle r7 as a remainder
-            if opcode == "div":
-                quotient = dest.get_reg_val() // src.get_reg_val()
-                remainder = dest.get_reg_val() % src.get_reg_val()
-                regs[7].set_reg_val(remainder)  # Save remainder to r7
-                dest.set_reg_val(quotient)  # Update the quotient in the destination register
-            else:
-                operation_mapping[opcode](register, operand2_reg)
-
+            operation_mapping[opcode](register, operand2_reg)
             instructions.append(InstructionSet(
                 step, opcode, register, 1, operand2_reg.get_reg_adr(), operand2_reg.get_reg_val()))
 
+            # Handle r7 as a remainder
+            if opcode == "div":
+                remainder = register.get_reg_val() % operand2_reg.get_reg_val()
+                regs[7].set_reg_val(remainder)  # Save remainder to r7
 
-
-            step += 1
-
+        step += 1
 
 
     print_output(instructions, regs)
-    
+
 
 def print_output(instructions, regs):
     print("\n Decoded Form                   Encoded Form                   Clock Cycles")
@@ -141,16 +136,19 @@ def print_output(instructions, regs):
         print(f"{decoded_form} {encoded_form}{instruction.clkcyc}")
 
     # Result
-    # Result
     print("\nValues of registers after the execution:")
     for reg in regs:
         reg_adr = reg.get_reg_adr()
         reg_val = reg.get_reg_val()
+        if reg_adr == 'r7' and reg_val == 0:
+            continue  # Skip printing r7 if its value is 0
         print(f"{reg_adr}   {reg_val:3}  [{reg.to_32bit_val()}]")
-
 
     # Clock cycle Calculation
     total_clk_cycles = sum(instruction.clkcyc for instruction in instructions)
+    # print(f"\ntotal_clk_cycles = {total_clk_cycles}")
+    # print(f"len(instruction) = {len(instructions)}")
+    # CPI Calculation
     cpi = total_clk_cycles / len(instructions)
     print("\nCPI value is", cpi)
 

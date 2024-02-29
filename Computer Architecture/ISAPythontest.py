@@ -28,13 +28,13 @@ class Registers:
 
 
 class InstructionSet:
-    def __init__(self, step, opcode, register, operand, operand_value, clkcyc):
+    def __init__(self, step, opcode, register, clkcyc, operand="", value=None):
         self.step = step
         self.opcode = opcode
         self.register = register
-        self.operand = operand
-        self.operand_value = operand_value
         self.clkcyc = clkcyc
+        self.operand = operand
+        self.value = value if value is not None else register.get_reg_val()
 
     def five_bit_opcode(self):
         opcode_map = {
@@ -49,16 +49,22 @@ class InstructionSet:
     def encode_instruction(self):
         opcode = self.five_bit_opcode()
         operand1 = self.register.to_3bit_adr()
-        operand2 = self.operand_value[-16:]
+        operand2 = self.to_32bit_val()[-24:]
         return f"[{opcode} {operand1} {operand2}]"
 
+    def to_32bit_val(self):
+        if self.value >= 0:
+            return f"{self.value:032b}"
+        else:
+            return bin(self.value & 0xFFFFFFFF)[2:]
+
     def __str__(self):
-        decoded_form = f"{self.step + 1}. {self.opcode} {self.register.get_reg_adr()}"
+        decoded_form = f"[{self.step}] {self.opcode}{self.register.get_reg_adr()}"
         if self.operand != "":
             decoded_form += f" {self.operand}"
-        decoded_form = decoded_form.ljust(20)
-        encoded_form = self.encode_instruction().ljust(40)
-        return f"{decoded_form} {encoded_form}            {self.clkcyc}"
+        decoded_form = decoded_form.ljust(15)
+        encoded_form = self.encode_instruction()
+        return f"{decoded_form} {encoded_form}"
 
 
 def main():
@@ -101,48 +107,60 @@ def main():
             }
             operation_mapping[opcode](register, operand2_reg)
             instructions.append(InstructionSet(
-                step, opcode, register, operand2_reg.to_3bit_adr(), operand2_reg.to_32bit_val(), 1))
+                step, opcode, register, 1, operand2_reg.get_reg_adr(), operand2_reg.get_reg_val()))
         step += 1
 
-    print("\n Decoded Form               Encoded Form               Clock Cycles")
-    total_clk_cycles = 0
-    for instruction in instructions:
-        print(instruction)
-        total_clk_cycles += instruction.clkcyc
+    print_output(instructions, regs)
 
+
+def print_output(instructions, regs):
+    print("\n Decoded Form                   Encoded Form                   Clock Cycles")
+    for instruction in instructions:
+        decoded_form = f"{instruction.step + 1}. {instruction.opcode} {instruction.register.get_reg_adr()}"
+        if instruction.operand != "":
+            decoded_form += f" {instruction.operand}"
+        decoded_form = decoded_form.ljust(20)
+        encoded_form = instruction.encode_instruction().ljust(47)
+        print(f"{decoded_form} {encoded_form}{instruction.clkcyc}")
+
+    #Steps of the Register
     print("\nSteps of the Register")
     for instruction in instructions:
         reg_adr = instruction.register.to_3bit_adr()
         reg_val = instruction.register.get_reg_val()
         print(
-            f"{reg_adr} = {reg_val:3}  [{instruction.register.to_32bit_val()}]")
+            f"{reg_adr} = {reg_val:2} [{instruction.register.to_32bit_val()}]")
 
+    #Result
     print("\nValues of registers after the execution of the instruction set")
     for reg in regs:
         reg_adr = reg.get_reg_adr()
         reg_val = reg.get_reg_val()
         print(f"{reg_adr}   {reg_val:3}  [{reg.to_32bit_val()}]")
-
+        
+    # Clock cycle Calculation
+    total_clk_cycles = sum(instruction.clkcyc for instruction in instructions)
+    # CPI Calculation
     cpi = total_clk_cycles / len(instructions)
-    print("\nCPI of the program is", round(cpi, 2))
+    print("\nCPI of the program is", cpi)
 
-    clkcys_with_pipeline = max(instruction.step + 1 for instruction in instructions) + 3
+    clkcys_with_pipeline = len(instructions) + 3
     print("\nThe pipelined version showing execution of the program")
-    print("*" * (clkcys_with_pipeline * 6 + 5))
-    print(f"{'':17}", end="")
+    print("*" * 65)
+    print(f"{'':15}", end="")
     for x in range(1, clkcys_with_pipeline + 1):
         print(f"{x:5d}", end="")
 
     for instruction in instructions:
         if instruction.operand == "":
             print(
-                f"\n{instruction.step + 1}. {instruction.opcode}{instruction.register.get_reg_adr()}{instruction.operand_value:2}", end=" ")
+                f"\n{instruction.step + 1}. {instruction.opcode} {instruction.register.get_reg_adr()} {instruction.value:2}", end=" ")
         else:
             print(
-                f"\n{instruction.step + 1}. {instruction.opcode}{instruction.register.get_reg_adr()}{instruction.operand}", end=" ")
+                f"\n{instruction.step + 1}. {instruction.opcode} {instruction.register.get_reg_adr()} {instruction.operand}", end=" ")
         for _ in range(instruction.step + 1):
-            print(f"{'':5}", end="")
-        print(f"{instruction.clkcyc} | {instruction.clkcyc} | {instruction.clkcyc} | {instruction.clkcyc}", end="")
+            print(" " * 5, end="")
+        print("IF | ID | EX | WB", end="")
 
     print(
         f"\n\nPipelined execution took {clkcys_with_pipeline} clock cycles to complete the program execution")
