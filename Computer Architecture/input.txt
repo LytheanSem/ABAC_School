@@ -1,0 +1,28 @@
+mov r1 10
+add r0 20
+mul r1 2
+sub r0 1
+mov r3 2
+end 0 0
+
+mov r1 345
+mov r2 339
+sub r2 r1
+mov r3 r2
+mov r4 111
+mul r3 r4
+mov r5 r3
+div r5 11
+end 0 0
+
+mov r1 34
+mov r2 56
+sub r1 r2
+mov r3 r1
+mov r4 81
+mul r4 r3
+mov r5 r7
+mov r6 r4
+div r6 14
+mov r5 r7
+end 0 0

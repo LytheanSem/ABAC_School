@@ -5,11 +5,26 @@ def read_input(filename):
     # Read the number of instances for each initial resource
     initial_resources = list(map(int, lines[1].strip().split()))
 
-    # Read the allocation matrix
-    allocation_matrix = [list(map(int, line.strip().split())) for line in lines[3:8]]
+    # Find the line index where the Allocation section starts
+    allocation_start_index = lines.index("# Allocation\n") + 1
 
-    # Read the max matrix
-    max_matrix = [list(map(int, line.strip().split())) for line in lines[9:]]
+    # Find the line index where the Max section starts
+    max_start_index = lines.index("# Max\n") + 1
+
+    # Determine the number of processes based on the Allocation section
+    processes = max_start_index - allocation_start_index
+
+    # Read the allocation matrix dynamically based on the number of processes
+    allocation_matrix = []
+    for line in lines[allocation_start_index:allocation_start_index + processes]:
+        if not line.startswith("#"):  # Skip comment lines
+            allocation_matrix.append(list(map(int, line.strip().split())))
+
+    # Read the max matrix dynamically based on the number of processes
+    max_matrix = []
+    for line in lines[max_start_index:max_start_index + processes]:
+        if not line.startswith("#"):  # Skip comment lines
+            max_matrix.append(list(map(int, line.strip().split())))
 
     return initial_resources, allocation_matrix, max_matrix
 
@@ -27,7 +42,7 @@ def print_matrix(matrix, header, label):
     max_widths = [max(len(str(matrix[i][j])) for i in range(len(matrix))) for j in range(len(header))]
     
     # Print the header
-    print("{:10}".format("Process"), end=" ")
+    print("{:10}".format(""), end=" ")
     for i in range(len(header)):
         print("{:>{width}}".format(header[i], width=max_widths[i] + 1), end=" ")
     print()
@@ -72,8 +87,11 @@ def bankers_algorithm(resources, allocation_matrix, max_matrix):
         found = False
 
         print("\nIteration:", iteration)
-        print("Available Resources:", available_resources)
-        
+        # print("Available Resources:", available_resources)
+        header = ["R{}".format(i) for i in range(len(available_resources))]
+        print("Available Resources:", ", ".join("{} = {}".format(header[i], available_resources[i]) for i in range(len(available_resources))))
+
+
         # Print Max Matrix
         print_matrix(max_matrix, ["R{}".format(i) for i in range(len(max_matrix[0]))], "Max Matrix")
         
@@ -83,7 +101,7 @@ def bankers_algorithm(resources, allocation_matrix, max_matrix):
         # Print Need Matrix
         print("\nNeed Matrix:")
         header = ["R{}".format(i) for i in range(resources_count)]
-        print("{:10} {}".format("Process", " ".join(header)))
+        print("{:10} {}".format("", " ".join(header)))
         for i in range(processes):
             print("{:10} {}".format(
                 f"P{i}",
@@ -131,6 +149,7 @@ def main():
 
     if len(safe_sequence) == len(allocation_matrix):
         print("\nSystem is in a safe state.")
+        print(f"The resource allocaiton has been completed with {iteration} iteration(s).")
         # print("Safe sequence:", safe_sequence)
         print("Safe sequence: P" + ", P".join(map(str, safe_sequence)))
             

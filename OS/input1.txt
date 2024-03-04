@@ -1,4 +1,4 @@
-#Number of instances for each initial resources
+# Number of instances for each initial resources
 2 4 3 15 1
 # Allocation
 0 0 0 0 0
